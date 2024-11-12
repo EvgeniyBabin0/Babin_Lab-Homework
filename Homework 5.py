@@ -2,9 +2,9 @@ from datetime import datetime
 def parse_date(date_string):
     """Пытается распарсить строку даты в объект datetime."""
     formats = [
-        "%A, %B %d, %Y",  # The Moscow Times — Wednesday, October 2, 2002
-        "%A, %d.%m.%y",  # The Guardian — Friday, 11.10.13
-        "%A, %d %B %Y"  # Daily News — Thursday, 18 August 1977
+        "%A, %B %d, %Y",  
+        "%A, %d.%m.%y",  
+        "%A, %d %B %Y"  
     ]
 
     for fmt in formats:
