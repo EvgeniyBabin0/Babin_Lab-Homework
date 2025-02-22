@@ -1,0 +1,118 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import random
+
+# Параметры моделирования
+t_c = 0.001  # Время моделирования, сек (1 мс)
+h = h = 0.000001     # Шаг по времени, сек (1 мкс)
+time = np.arange(0, t_c, h)  # Массив времени
+
+# Параметры генератора импульсов
+freq1 = 5000  # Частота сигнала 5 кГц
+freq2 = 10000 # Частота сигнала 10 кГц
+
+# Постоянные времени
+T1 = 0.00001
+T2 = 0.00002
+
+# Амплитуды помех
+A1 = 0.1
+A2 = 0.3
+
+# Границы запрещённой зоны
+Umin1, Umax1 = 1.5, 3.5
+Umin2, Umax2 = 2.0, 4.0
+
+# Логические уровни
+logic_0 = 0.5
+logic_1 = 4.5
+
+# Генерация прямоугольных сигналов
+def generate_square_wave(freq, time, logic_0, logic_1):
+    period = 1 / freq
+    signal = [(logic_1 if (t % period) < (period / 2) else logic_0) for t in time]
+    return np.array(signal)
+
+signal_5kHz = generate_square_wave(freq1, time, logic_0, logic_1)
+signal_10kHz = generate_square_wave(freq2, time, logic_0, logic_1)
+
+# Учёт ёмкости методом Эйлера
+def calculate_input_voltage(signal, T, h):
+    U = [signal[0]]  # Начальное значение напряжения
+    for n in range(1, len(signal)):
+        U_next = U[-1] + h * (signal[n] - U[-1]) / T
+        U.append(U_next)
+    return np.array(U)
+
+U_input_T1 = calculate_input_voltage(signal_5kHz, T1, h)
+U_input_T2 = calculate_input_voltage(signal_10kHz, T2, h)
+
+# Добавление помех
+def add_noise(signal, A):
+    noisy_signal = [u + random.uniform(-A, A) for u in signal]
+    return np.array(noisy_signal)
+
+U_noisy_T1 = add_noise(U_input_T1, A1)
+U_noisy_T2 = add_noise(U_input_T2, A2)
+
+# Расчёт выходного сигнала логического каскада
+def calculate_output_signal(U_input, Umin, Umax):
+    output = [logic_0]  # Начальное значение сигнала на выходе
+    for n in range(1, len(U_input)):
+        if output[-1] == logic_0 and U_input[n] > Umax:
+            output.append(logic_1)
+        elif output[-1] == logic_1 and U_input[n] < Umin:
+            output.append(logic_0)
+        else:
+            output.append(output[-1])
+    return np.array(output)
+
+output_signal_T1 = calculate_output_signal(U_noisy_T1, Umin1, Umax1)
+output_signal_T2 = calculate_output_signal(U_noisy_T2, Umin2, Umax2)
+
+# Построение всех сигналов в одном окне
+plt.figure(figsize=(12, 12))
+
+# Прямоугольные импульсы
+plt.subplot(4, 1, 1)
+plt.plot(time, signal_5kHz, label="Прямоугольный сигнал (5 kHz)")
+plt.plot(time, signal_10kHz, label="Прямоугольный сигнал (10 kHz)", alpha=0.7)
+plt.title("Прямоугольные импульсы")
+plt.xlabel("Время (с)")
+plt.ylabel("Напряжение (В)")
+plt.legend()
+plt.grid()
+
+# Сигналы с учётом ёмкости
+plt.subplot(4, 1, 2)
+plt.plot(time, U_input_T1, label="Сигнал с учётом ёмкости T1 (5 kHz)")
+plt.plot(time, U_input_T2, label="Сигнал с учётом ёмкости T2 (10 kHz)", alpha=0.7)
+plt.title("Сигналы с учётом ёмкостной составляющей")
+plt.xlabel("Время (с)")
+plt.ylabel("Напряжение (В)")
+plt.legend()
+plt.grid()
+
+# Сигналы с помехами
+plt.subplot(4, 1, 3)
+plt.plot(time, U_noisy_T1, label="Сигнал с шумом A1 (5 kHz)")
+plt.plot(time, U_noisy_T2, label="Сигнал с шумом A2 (10 kHz)", alpha=0.7)
+plt.title("Сигналы с учётом помехи")
+plt.xlabel("Время (с)")
+plt.ylabel("Напряжение (В)")
+plt.legend()
+plt.grid()
+
+# Выходные сигналы логического каскада
+plt.subplot(4, 1, 4)
+plt.plot(time, output_signal_T1, label="Выходной сигнал T1 (5 kHz)")
+plt.plot(time, output_signal_T2, label="Выходной сигнал T2 (10 kHz)", alpha=0.7)
+plt.title("Выходные сигналы логического каскада")
+plt.xlabel("Время (с)")
+plt.ylabel("Логический уровень")
+plt.legend()
+plt.grid()
+
+# Отображение всех графиков
+plt.tight_layout()
+plt.show()
