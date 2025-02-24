@@ -1,0 +1,47 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Параметры
+fs = 1000000  # Частота дискретизации (1 МГц)
+t_total = 0.001  # Общее время моделирования (1 мс)
+t = np.arange(0, t_total, 1/fs)  # Временная ось
+
+# Функция для генерации треугольного сигнала
+def generate_triangle(frequency, amplitude):
+    period = 1 / frequency
+    x = np.mod(t, period)
+    return amplitude * (2 * x / period - 1) * np.where(x < period / 2, 1, -1)
+
+# Генерация сигналов
+signal_10kHz = generate_triangle(10000, 5)
+signal_5kHz = generate_triangle(5000, 5)
+signal_2kHz = generate_triangle(2000, 5)
+
+# Визуализация
+plt.figure(figsize=(12, 6))
+plt.subplot(3, 1, 1)
+plt.plot(t, signal_10kHz, label='10 кГц', color='blue')
+plt.title('Треугольный сигнал (10 кГц)')
+plt.xlabel('Время (с)')
+plt.ylabel('Напряжение (В)')
+plt.grid()
+plt.legend()
+
+plt.subplot(3, 1, 2)
+plt.plot(t, signal_5kHz, label='5 кГц', color='orange')
+plt.title('Треугольный сигнал (5 кГц)')
+plt.xlabel('Время (с)')
+plt.ylabel('Напряжение (В)')
+plt.grid()
+plt.legend()
+
+plt.subplot(3, 1, 3)
+plt.plot(t, signal_2kHz, label='2 кГц', color='green')
+plt.title('Треугольный сигнал (2 кГц)')
+plt.xlabel('Время (с)')
+plt.ylabel('Напряжение (В)')
+plt.grid()
+plt.legend()
+
+plt.tight_layout()
+plt.show()
